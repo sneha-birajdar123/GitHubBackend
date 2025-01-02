@@ -7,11 +7,11 @@ const authMiddleware = (req, res, next) => {
     const authHeader = req.headers["authorization"]
     console.log(authHeader);
 
-    const token = authHeader.split(" ")[1]
+    const token = authHeader.split(" ")[1];
 
     try {
         const decoded = jwt.verify(token, jwt_secret)
-        req.user = decoded
+        // req.user = decoded
         next()
     } catch (error) {
         console.error("Invalid token:", error);

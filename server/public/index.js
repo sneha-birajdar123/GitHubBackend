@@ -12,7 +12,7 @@ let URL = config.get("SERVER_URL");
 
 const router = express.Router();
 
-router.post("/registerUser", async (req, res) => {
+router.post("/register", async (req, res) => {
     try {
         const { role_type, user_view_type, site_admin, name, company, blog, location, email, phone, password, bio } = req.body
 
@@ -61,49 +61,19 @@ router.post("/registerUser", async (req, res) => {
         }
 
         sendSMS(smsData);
-
         console.log(`${URL}/api/public/emailverify/${emailToken}`);
         console.log(`${URL}/api/public/phoneverify/${phoneToken}`);
-
         res.status(200).json({ msg: `You will be registered as new GitHub user once your verify your email and mobile via link provided on your email and phone number!🙌` })
+   
     } catch (error) {
         console.log(error);
         res.status(200).json({ msg: error })
     }
 })
 
-router.post("/loginUser", async (req, res) => {
-    try {
-        const { email, password } = req.body
-
-        const user = await userModel.findOne({ email })
-
-        if (!user) {
-            return res.status(400).json({ msg: "Invalid Credentials" });
-        }
-
-        let checkUser = await userModel.findOne({ email });
-        if (!checkUser) {
-            return res.status(200).json({ msg: `Invalid email!` });
-        }
-
-        let checkPassword = await bcrypt.compare(password, checkUser.password)
-        if (!checkPassword) {
-            return res.status(200).json({ msg: `Invalid password` })
-        }
-        let token = jwt.sign({ checkUser }, jwt_secret, { expiresIn: "1d" });
-        res.status(200).json({ msg: `User loggedin successfully!`, token })
-
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({ msg: error })
-    }
-})
-
-
 router.get("/emailverify/:token", async (req, res) => {
     try {
-        const { token } = req.params.token
+        const { token } = req.params
         const user = await userModel.findOne({ "userVerifyToken.email": token });
 
         if (!user) {
@@ -151,5 +121,35 @@ router.get("/phoneverify/:token", async (req, res) => {
         res.status(500).json({ msg: error })
     }
 })
+
+router.post("/login", async (req, res) => {
+    try {
+        const { email, password } = req.body
+        const user = await userModel.findOne({ email })
+        if (!user) {
+            return res.status(400).json({ msg: "Invalid Credentials" });
+        }
+
+        if (!user.userVerified.email) {
+            return res.status(400).json({ msg: "Please verify your email before logging in." });
+        }
+
+        if (!user.userVerified.phone) {
+            return res.status(400).json({ msg: "Please verify your phone before logging in." });
+        }
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+            return res.status(400).json({ msg: "Invalid credentials" });
+        }
+        const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "1h" });
+        res.status(200).json({ msg: "User LoggedIn Successfully", token });
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ msg: error })
+    }
+})
+
 
 export default router;

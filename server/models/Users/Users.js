@@ -54,19 +54,15 @@ const userSchema = mongoose.Schema({
     },
     public_repos: {
         type: Number,
-        required: true
     },
     public_gists: {
-        type: Number,
-        required: true
+        type: Number
     },
     followers: {
         type: Number,
-        required: true
     },
     following: {
         type: Number,
-        required: true
     },
     userVerified: {
         email: {
