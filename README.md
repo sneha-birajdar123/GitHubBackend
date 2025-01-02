@@ -15,4 +15,3 @@ follow the below commands to setup my project into your laptop/pc
 
 * npm start
 
-* If you're ensure about anything, feel free to ask me on neha06844@gmail.com.
